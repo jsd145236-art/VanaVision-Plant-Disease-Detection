@@ -213,6 +213,17 @@ def inject_globals():
 def home():
     return render_template("index.html", plants=plant_catalog()[:8], plant_count=len(plant_catalog()), class_count=len(CLASS_NAMES))
 
+
+@app.route("/sitemap.xml")
+def sitemap():
+    pages = [
+        url_for("home", _external=True),
+    ]
+
+    xml = render_template("sitemap.xml", pages=pages)
+    return app.response_class(xml, mimetype="application/xml")
+
+
 @app.route("/register", methods=["GET","POST"])
 def register():
     if request.method=="POST":
@@ -356,6 +367,8 @@ def profile():
 def too_large(_):
     flash("Image is too large. Maximum upload size is 10 MB.", "danger")
     return redirect(url_for("detect"))
+
+print(app.url_map)
 
 if __name__ == "__main__":
     app.run(debug=os.getenv("FLASK_DEBUG","0")=="1")
