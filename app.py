@@ -66,13 +66,37 @@ init_db()
 
 def mongo_db():
     global _mongo
+
     if not MONGO_URI:
-        return None
+        app.logger.error("MONGO_URI is missing!")
+        raise RuntimeError("MongoDB connection string is not configured.")
+
     if _mongo is None:
-        from pymongo import MongoClient
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2500)
-        client.admin.command("ping")
-        _mongo = client[os.getenv("MONGO_DB_NAME", "vanavision")]
+        try:
+            from pymongo import MongoClient
+            import certifi
+
+            client = MongoClient(
+                MONGO_URI,
+                tlsCAFile=certifi.where(),
+                serverSelectionTimeoutMS=15000,
+                connectTimeoutMS=15000,
+                socketTimeoutMS=20000
+            )
+
+            # Verify MongoDB Atlas connection
+            client.admin.command("ping")
+
+            _mongo = client[
+                os.getenv("MONGO_DB_NAME", "vanavision")
+            ]
+
+            app.logger.info("MongoDB Atlas connected successfully!")
+
+        except Exception:
+            app.logger.exception("MongoDB Atlas connection failed!")
+            raise
+
     return _mongo
 
 def store_user(name, email, password_hash):
