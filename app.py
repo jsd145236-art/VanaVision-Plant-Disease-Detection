@@ -15,13 +15,20 @@ app = Flask(__name__)
 app.config.update(
     SECRET_KEY=os.getenv("SECRET_KEY", "change-this-secret-before-deployment"),
     MAX_CONTENT_LENGTH=10 * 1024 * 1024,
-    UPLOAD_FOLDER=str(BASE_DIR / "static" / "uploads"),
+
+    UPLOAD_FOLDER=str(Path(os.getenv("DATA_DIR", str(BASE_DIR / "instance"))) / "uploads"),
+
     SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.getenv("COOKIE_SECURE", "0") == "1"
 )
 Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
-DB_PATH = BASE_DIR / "instance" / "vanavision.sqlite3"
+
+DATA_DIR = Path(os.getenv("DATA_DIR", str(BASE_DIR / "instance")))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH = DATA_DIR / "vanavision.sqlite3"
+
+
 DB_PATH.parent.mkdir(exist_ok=True)
 MONGO_URI = os.getenv("MONGO_URI", "").strip()
 _mongo = None
